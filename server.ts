@@ -1,41 +1,26 @@
-import {
-  Application,
-  Router,
-  Context,
-} from 'https://deno.land/x/oak/mod.ts';
+import { Application } from 'https://deno.land/x/oak/mod.ts';
+
+import models from './models/index.ts';
+import routes from './routes/index.ts';
 
 const port = 8000;
 const app = new Application();
 
-const routerOne = new Router();
+app.use(async (ctx, next) => {
+  ctx.state = {
+    models,
+    me: models.users.get('1'),
+  };
 
-routerOne.get('/1', (ctx) => {
-  ctx.response.body = 'Hello Deno 1';
-});
-
-const routerTwo = new Router();
-
-routerTwo.get('/2', (ctx) => {
-  ctx.response.body = 'Hello Deno 2';
-});
-
-app.use(routerOne.routes());
-app.use(routerOne.allowedMethods());
-
-app.use(routerTwo.routes());
-app.use(routerTwo.allowedMethods());
-
-const logging = async (ctx: Context, next: Function) => {
-  console.log(`HTTP ${ctx.request.method} on ${ctx.request.url}`);
   await next();
-};
-
-app.use(logging);
-
-app.use((ctx) => {
-  console.log('returning a response ...');
-  ctx.response.body = 'Hello Deno';
 });
+
+app.use(routes.session.allowedMethods());
+app.use(routes.session.routes());
+app.use(routes.user.allowedMethods());
+app.use(routes.user.routes());
+app.use(routes.message.allowedMethods());
+app.use(routes.message.routes());
 
 app.addEventListener('listen', () => {
   console.log(`Listening on: localhost:${port}`);
