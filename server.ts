@@ -1,3 +1,5 @@
+import { v4 } from 'https://deno.land/std/uuid/mod.ts';
+
 import {
   Application,
   Router,
@@ -46,6 +48,10 @@ const app = new Application();
 
 const router = new Router();
 
+router.get('/session', (ctx) => {
+  ctx.response.body = ctx.state.me;
+});
+
 router.get('/users', (ctx) => {
   ctx.response.body = Array.from(users.values());
 });
@@ -62,6 +68,36 @@ router.get('/messages', (ctx) => {
 router.get('/messages/:messageId', (ctx) => {
   const { messageId } = helpers.getQuery(ctx, { mergeParams: true });
   ctx.response.body = messages.get(messageId);
+});
+
+router.post('/messages', async (ctx) => {
+  const id = v4.generate();
+
+  const {
+    value: { text },
+  } = await ctx.request.body();
+
+  messages.set(id, {
+    id,
+    text,
+    userId: ctx.state.me.id,
+  });
+
+  ctx.response.body = messages.get(id);
+});
+
+router.delete('/messages/:messageId', async (ctx) => {
+  const { messageId } = helpers.getQuery(ctx, { mergeParams: true });
+
+  const isDeleted = messages.delete(messageId);
+
+  ctx.response.body = isDeleted;
+});
+
+app.use(async (ctx, next) => {
+  ctx.state = { me: users.get('1') };
+
+  await next();
 });
 
 app.use(router.allowedMethods());
