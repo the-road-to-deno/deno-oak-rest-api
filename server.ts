@@ -49,7 +49,7 @@ const app = new Application();
 const router = new Router();
 
 router.get('/session', (ctx) => {
-  ctx.response.body = ctx.state.me;
+  ctx.response.body = users.get(ctx.state.me.id);
 });
 
 router.get('/users', (ctx) => {
