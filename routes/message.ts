@@ -15,9 +15,8 @@ router.get('/messages/:messageId', (ctx) => {
 router.post('/messages', async (ctx) => {
   const id = v4.generate();
 
-  const {
-    value: { text },
-  } = await ctx.request.body();
+  const { value } = ctx.request.body({ type: 'json' });
+  const { text } = await value;
 
   ctx.state.models.messages.set(id, {
     id,
